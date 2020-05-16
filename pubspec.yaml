@@ -24,7 +24,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
 
-  bubble: ^1.1.9+1
   badges: ^1.1.0
   pull_to_refresh: ^1.5.7
   image_picker: ^0.6.3+4
@@ -36,7 +35,8 @@ dependencies:
   video_player: ^0.10.8+1
   path_provider: ^1.6.5
   permission_handler: '^4.4.0+hotfix.2'
-  flutter_mimc: ^1.0.2
+  flutter_mimc:
+    path: ../flutter_mimc
 
 dev_dependencies:
   flutter_test:

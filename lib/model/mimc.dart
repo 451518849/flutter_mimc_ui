@@ -9,40 +9,67 @@ class MIMC {
   static String clientId;
   static FlutterMIMC instance;
   static Future<void> login(String clientId) async {
-
     MIMC.clientId = clientId;
     instance = await FlutterMIMC.init(
         debug: false,
-        appId: "xxx",
-        appKey: "xxx",
-        appSecret: "xxx/cxsSIQ==",
+        appId: "2882303761518059816",
+        appKey: "5271805995816",
+        appSecret: "1ju3Ffd9RYkHEpE/cxsSIQ==",
         appAccount: clientId);
 
     await instance.login();
   }
 
   static void sendText(String from, String to, String text) {
-    MIMCMessage message = MIMCMessage();
-    message.bizType = ImMessageType.text;
+    ImMessage message = ImMessage();
     message.fromAccount = from;
     message.toAccount = to;
+    message.bizType = ImMessageType.text;
     message.timestamp = DateTime.now().millisecondsSinceEpoch;
+
     Map<String, dynamic> payloadMap = {
-      "from_account": from,
-      "to_account": to,
-      "biz_type": ImMessageType.text,
+      "fromAccount": from,
+      "toAccount": to,
+      "bizType": ImMessageType.text,
       "version": "0",
       "text": text,
       "timestamp": DateTime.now().millisecondsSinceEpoch,
     };
 
     message.payload = json.encode(payloadMap);
+    instance.sendMessage(message).then((res) {
+      print('rres:${base64.decode(res)}');
+    });
+  }
+
+  static void sendWhisper(String from, String to, num sequence, String type) {
+    ImMessage message = ImMessage();
+    message.fromAccount = from;
+    message.toAccount = to;
+    message.bizType = type;
+    message.isStore = false;
+    message.timestamp = DateTime.now().millisecondsSinceEpoch;
+    Map<String, dynamic> payloadMap;
+    if (type == ImMessageType.read) {
+      payloadMap = {
+        "messageId": sequence,
+        "read": ImMessageReadType.read,
+        "timestamp": DateTime.now().millisecondsSinceEpoch,
+      };
+    } else if (type == ImMessageType.recall) {
+      payloadMap = {
+        "messageId": sequence,
+        "recall": ImMessageRecallType.recall,
+        "timestamp": DateTime.now().millisecondsSinceEpoch,
+      };
+    }
+    message.payload = json.encode(payloadMap);
     instance.sendMessage(message);
   }
 
   // 获取最近会话列表
   static Future<dynamic> getContacts() async {
-    var res = await instance.getContact(isV2: true);
+    var res = await instance.getContact(isV2: true, msgExtraFlag: true);
     if (res.code == 200) {
       print("获取最近会话列表成功：${res.toJson()}");
       return res.data["contacts"];
@@ -96,26 +123,32 @@ class MIMC {
     }
   }
 
-  static void receiveMessage(
-      void Function(Map<String, dynamic> content) callback) {
+  static void receiveMessage(void Function(ImMessage message) callback) {
     // 接收单聊
     instance.addEventListenerHandleMessage().listen((MIMCMessage message) {
-      //第一步清除未读消息数
-      // clearConversationUnreadMessagesCount(message.toAccount);
-      callback(message.toJson());
+      print('收到消息：');
+      callback(ImMessage.fromJson(message.toJson(), encode: false));
     }).onError((err) {});
   }
 
   //所有的更新只能在extra字段上进行
   //更新消息中的extra字段
-  static void updateMessage(String from, String to, String sequence,
+  static void updateMessage(String from, String to, num sequence,
       String extraKey, String extraValue) {
-    instance.updatePullP2PExtraV2(
-        toAccount: to,
-        fromAccount: from,
-        sequence: sequence,
-        extraKey: extraKey,
-        extraValue: extraValue);
+    Map<String, dynamic> extra = {extraKey: extraValue};
+    instance.updatePullP2PExtra(
+      toAccount: to,
+      fromAccount: from,
+      sequence: sequence.toString(),
+      extra: json.encode(extra),
+    );
+
+    // instance.updatePullP2PExtraV2(
+    //     toAccount: to,
+    //     fromAccount: from,
+    //     sequence: sequence.toString(),
+    //     extraKey: 'read',
+    //     extraValue: extraValue);
   }
 
   static void updateMessages(

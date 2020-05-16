@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_mimc_ui/model/message.dart';
 import 'package:flutter_mimc_ui/view/avatar.dart';
-import 'package:bubble/bubble.dart';
 
 import '../message.dart';
 
@@ -21,7 +20,7 @@ class AudioMessage extends StatefulWidget {
 
 class _AudioMessageState extends State<AudioMessage> {
   bool _isVoice = false;
-  String _speakVoiceMessageId;
+  num _speakVoiceMessageId;
 
   @override
   Widget build(BuildContext context) {
@@ -41,25 +40,28 @@ class _AudioMessageState extends State<AudioMessage> {
               ),
             ),
             GestureDetector(
-              onTap: () =>
-                  _speakVoice(widget.message.messageId, widget.message.secondaryPayload.meta.url),
+              onTap: () => _speakVoice(widget.message.sequence,
+                  widget.message.secondaryPayload.meta.url),
               child: Container(
-                margin: const EdgeInsets.only(bottom: 10, left: 4),
-                child: Bubble(
-                  stick: true,
-                  nip: BubbleNip.leftTop,
+                margin: const EdgeInsets.only(bottom: 10, right: 10),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                constraints: BoxConstraints(maxWidth: 250),
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  child: Row(
-                    children: <Widget>[
-                      Image.asset(
-                        'assets/images/speak_left.png',
-                        width: 20,
-                        height: 20,
-                      ),
-                      Container(
-                          child: Text(''' ${widget.message.secondaryPayload.meta.duration}'' ''')),
-                    ],
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Image.asset(
+                      'assets/images/speak_left.png',
+                      width: 20,
+                      height: 20,
+                    ),
+                    Container(
+                        child: Text(
+                            ''' ${widget.message.secondaryPayload.meta.duration}'' ''')),
+                  ],
                 ),
               ),
             ),
@@ -68,7 +70,8 @@ class _AudioMessageState extends State<AudioMessage> {
       );
     } else {
       return GestureDetector(
-        onTap: () => _speakVoice(widget.message.messageId, widget.message.secondaryPayload.meta.url),
+        onTap: () => _speakVoice(
+            widget.message.sequence, widget.message.secondaryPayload.meta.url),
         child: Container(
           margin: const EdgeInsets.only(right: 10, top: 10),
           child: Row(
@@ -77,23 +80,26 @@ class _AudioMessageState extends State<AudioMessage> {
             children: <Widget>[
               Container(
                 width: 80.0 + widget.message.secondaryPayload.meta.duration,
-                margin: const EdgeInsets.only(bottom: 10, right: 4),
-                child: Bubble(
-                  stick: true,
-                  nip: BubbleNip.rightTop,
+                margin: const EdgeInsets.only(bottom: 10, right: 10),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                constraints: BoxConstraints(maxWidth: 250),
+                decoration: BoxDecoration(
                   color: widget.color,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      Container(
-                          child: Text(''' ${widget.message.secondaryPayload.meta.duration}'' ''')),
-                      Image.asset(
-                        'assets/images/speak_right.png',
-                        width: 20,
-                        height: 20,
-                      ),
-                    ],
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(6)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Container(
+                        child: Text(
+                            ''' ${widget.message.secondaryPayload.meta.duration}'' ''')),
+                    Image.asset(
+                      'assets/images/speak_right.png',
+                      width: 20,
+                      height: 20,
+                    ),
+                  ],
                 ),
               ),
               Container(
@@ -106,7 +112,7 @@ class _AudioMessageState extends State<AudioMessage> {
     }
   }
 
-  void _speakVoice(String messageId, String path) {
+  void _speakVoice(num messageId, String path) {
     if (_speakVoiceMessageId == messageId && _isVoice == true) {
       audioPlayer.stop();
       _isVoice = false;

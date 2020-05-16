@@ -43,13 +43,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.5"
-  bubble:
-    dependency: "direct main"
-    description:
-      name: bubble
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.1.9+1"
   charcode:
     dependency: transitive
     description:
@@ -100,9 +93,9 @@ packages:
   flutter_mimc:
     dependency: "direct main"
     description:
-      name: flutter_mimc
-      url: "https://pub.flutter-io.cn"
-    source: hosted
+      path: "../flutter_mimc"
+      relative: true
+    source: path
     version: "1.0.2"
   flutter_plugin_android_lifecycle:
     dependency: transitive

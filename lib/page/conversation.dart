@@ -94,30 +94,103 @@ class _ImConversationPageState extends State<ImConversationPage> {
 
     //加入到会话中
     _requestData();
+    _receiveMessage();
 
     _focusNode.addListener(_focusNodeListener); // 初始化一个listener
-  }
-
-  void _requestData() {
-    MIMC.pullConversationHistoryMessages(widget.toUser.uid, _limit).then((res) {
-      List<ImMessage> newMessages = ImMessages.fromJson(res).messages;
-      if (newMessages.length != 0) {
-        ImMessage lastMessage = newMessages[newMessages.length - 1];
-
-        if (lastMessage.toAccount == widget.currentUser.uid && lastMessage.extra.read == "0")
-          // 清空未读消息
-          MIMC.clearConversationUnreadMessages(lastMessage.fromAccount,
-              lastMessage.toAccount, lastMessage.sequence);
-        _limit += _limit;
-      }
-      _loadData(newMessages);
-    });
   }
 
   @override
   void dispose() {
     super.dispose();
     _focusNode.removeListener(_focusNodeListener); // 页面消失时必须取消这个listener！！
+  }
+
+  void _receiveMessage() {
+    MIMC.receiveMessage((message) {
+      if (message.bizType == ImMessageType.read) {
+        //确认消息已读
+        _updateUnreadMessage(message, true);
+      } else if (message.bizType == ImMessageType.recall) {
+        //撤销不处理
+      } else {
+        //发送已读消息给fromAccount
+        MIMC.sendWhisper(widget.currentUser.uid, message.fromAccount,
+            message.sequence, ImMessageType.read);
+        _loadData([message]);
+      }
+    });
+  }
+
+  void _updateUnreadMessage(ImMessage message, bool update) {
+    //确认消息已读
+    MIMC.updateMessage(
+        widget.currentUser.uid,
+        widget.toUser.uid,
+        message.secondaryPayload.messageId,
+        ImMessageType.read,
+        ImMessageReadType.read);
+
+    _updateAllMessageRead(_messages);
+
+    if (update) {
+      setState(() {});
+    }
+  }
+
+//更新所有消息为已读
+  _updateAllMessageRead(List<ImMessage> messages) {
+    for (int i = 0; i < messages.length; i++) {
+      if (messages[i].extra == null ||
+          messages[i].extra.read != ImMessageReadType.read) {
+        messages[i].extra = ImMessageExtra(read: ImMessageReadType.read);
+      }
+    }
+  }
+
+  //遍历已读消息
+  _updateMessageRead(List<ImMessage> messages) {
+    int count = messages.length - 1;
+    for (int i = 0; i < messages.length; i++) {
+      //先找到最后一条已读的消息，然后把之前的都标记已读
+      if (messages[count - i].extra != null &&
+          messages[count - i].extra.read == ImMessageReadType.read) {
+        for (int j = 0; j < count - i; j++) {
+          messages[j].extra = ImMessageExtra(read: ImMessageReadType.read);
+        }
+        break;
+      }
+    }
+  }
+
+  void _requestData() {
+    MIMC.pullConversationHistoryMessages(widget.toUser.uid, _limit).then((res) {
+      List<ImMessage> newMessages = ImMessages.fromJson(res).messages;
+
+      if (newMessages.length != 0) {
+        ImMessage lastMessage = newMessages[newMessages.length - 1];
+
+        //最后一条消息是对方发送的消息，则发送已读通知
+        if (lastMessage.fromAccount == widget.toUser.uid &&
+            (lastMessage.extra == null ||
+                lastMessage.extra.read != ImMessageReadType.read)) {
+          MIMC.sendWhisper(widget.currentUser.uid, lastMessage.fromAccount,
+              lastMessage.sequence, ImMessageType.read);
+        } else if (lastMessage.fromAccount == widget.currentUser.uid &&
+            (lastMessage.extra != null &&
+                lastMessage.extra.read == ImMessageReadType.read)) {
+          //最后一条消息自己发送的，并且已经标记已读，则表示之前的消息全部已读
+          _updateAllMessageRead(newMessages);
+        } else if (lastMessage.fromAccount == widget.currentUser.uid &&
+            (lastMessage.extra == null ||
+                lastMessage.extra.read != ImMessageReadType.read)) {
+          //最后一条消息自己发送的，并且未读，需要遍历之前已读的消息
+          _updateMessageRead(newMessages);
+        }
+
+        _limit += _limit;
+        _loadData(newMessages);
+      }
+    });
   }
 
   void _loadData(List<ImMessage> newMessages) {
@@ -127,7 +200,7 @@ class _ImConversationPageState extends State<ImConversationPage> {
       } else {
         //如果第一条数据相同表示是旧数据
         if (_messages.length != 0 &&
-            newMessages[0].messageId == _messages[0].messageId) {
+            newMessages[0].sequence == _messages[0].sequence) {
           _refreshController.refreshCompleted();
           return;
         } else if (newMessages.length == 1 &&
@@ -449,7 +522,7 @@ class _ImConversationPageState extends State<ImConversationPage> {
     if (_focusNode.hasFocus) {
       FocusScope.of(context).requestFocus(FocusNode());
 
-      //Focus和setState冲突，延迟执行setState
+      //Focus��setState冲突，延迟执行setState
       Future.delayed(Duration(milliseconds: 100), () {
         setState(() {
           _isShowEmoji = !_isShowEmoji;
@@ -469,7 +542,7 @@ class _ImConversationPageState extends State<ImConversationPage> {
   }
 
   /*
-   * 点击 + 图标 
+   * 点击 + ��标 
    */
   void _openExpandedAction(BuildContext context) {
     if (_focusNode.hasFocus) {
