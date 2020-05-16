@@ -12,9 +12,9 @@ class MIMC {
     MIMC.clientId = clientId;
     instance = await FlutterMIMC.init(
         debug: false,
-        appId: "2882303761518059816",
-        appKey: "5271805995816",
-        appSecret: "1ju3Ffd9RYkHEpE/cxsSIQ==",
+        appId: "1",
+        appKey: "2",
+        appSecret: "4/cxsSIQ==",
         appAccount: clientId);
 
     await instance.login();

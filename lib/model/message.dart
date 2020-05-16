@@ -1,8 +1,5 @@
 import 'dart:convert';
-import 'dart:math';
-
 import 'package:flutter_mimc/flutter_mimc.dart';
-
 import 'user.dart';
 
 /*
@@ -32,7 +29,7 @@ import 'user.dart';
     "toAccount": to,
     "bizType":read,recall
     "payload":{
-      "messaegeId":messaegeId
+      "messaegeId":messaegeId //sequence
       "read":1
       "timestamp": DateTime.now().millisecondsSinceEpoch,
     }
@@ -99,7 +96,7 @@ class ImMessage extends MIMCMessage {
 
   factory ImMessage.fromJson(Map<dynamic, dynamic> jsonMap,
       {bool encode = true}) {
-    print('33333:$jsonMap');
+    print('ImMessage.fromJson:$jsonMap');
 
     String payload;
     if (encode) {
@@ -107,7 +104,8 @@ class ImMessage extends MIMCMessage {
     } else {
       payload = jsonMap['payload'];
     }
-    print('payload:$payload');
+    print('ImMessage.fromJson payload:$payload');
+
     bool hasExtra =
         (jsonMap['extra'] != null) && jsonMap['extra'].toString().length != 0;
 
