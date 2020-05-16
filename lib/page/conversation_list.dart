@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:badges/badges.dart';
 import 'package:flutter_mimc_ui/model/conversation.dart';
+import 'package:flutter_mimc_ui/model/message.dart';
 import 'package:flutter_mimc_ui/model/mimc.dart';
 import 'package:flutter_mimc_ui/model/user.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -146,8 +147,10 @@ class _ConversationListState extends State<ImConversationListPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              //自己发送的消息和已读消息不需要显示未读气泡
               conversation.lastMessage.fromAccount == widget.currentUserId ||
-                      conversation.lastMessage.extra.read == "0"
+                      conversation.lastMessage.extra.read ==
+                          ImMessageReadType.read
                   ? Container(
                       margin: EdgeInsets.only(left: 20, top: 7),
                       padding: EdgeInsets.all(10),
@@ -193,15 +196,40 @@ class _ConversationListState extends State<ImConversationListPage> {
                         style: TextStyle(fontWeight: FontWeight.w500),
                       ),
                     ),
-                    Container(
-                      constraints: BoxConstraints(maxWidth: 280),
-                      margin: EdgeInsets.only(top: 8),
-                      child: Text(
-                          '${conversation.lastMessage.secondaryPayload.text}',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ),
+                    conversation.lastMessage.fromAccount ==
+                                widget.currentUserId &&
+                            conversation.lastMessage.extra.read !=
+                                ImMessageReadType.read
+                        ? Container(
+                            constraints: BoxConstraints(maxWidth: 220),
+                            margin: EdgeInsets.only(top: 8,),
+                            child: Row(
+                              // mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                Text('[未读]',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                        color: Colors.blue[400],
+                                        fontSize: 12)),
+                                Text(
+                                    '${conversation.lastMessage.secondaryPayload.text}',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                        color: Colors.grey, fontSize: 12)),
+                              ],
+                            ))
+                        : Container(
+                            constraints: BoxConstraints(maxWidth: 280),
+                            margin: EdgeInsets.only(top: 8),
+                            child: Text(
+                                '${conversation.lastMessage.secondaryPayload.text}',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 12)),
+                          ),
                   ],
                 ),
               ),
